@@ -70,6 +70,11 @@ public abstract class AbstractSigilItem extends Item {
         }
     }
 
+    protected void onPlayerTick(PlayerEntity player)
+    {
+
+    }
+
     protected void spawnSigilParticles(World world, PlayerEntity player, float power) {
         if (world instanceof ServerWorld) {
             ServerWorld serverWorld = (ServerWorld) world;

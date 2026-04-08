@@ -8,12 +8,16 @@ import com.gunmetalblack.guardianproject.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
@@ -83,6 +87,22 @@ public class GuardianProjectMod
     @SubscribeEvent
     public static void onCommonSetupEvent(final FMLCommonSetupEvent event) {
         CapabilityManager.INSTANCE.register(IGaurdianPlayerDataHolderCapability.class, new GuardianPlayerDataHolderCapabilityStorage(), () -> null);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerAttack(LivingHurtEvent event)
+    {
+        Entity attacker = event.getSource().getDirectEntity();
+        if (attacker instanceof PlayerEntity)
+        {
+
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event)
+    {
+        //Grab Player then Cap ability
     }
 
     @SubscribeEvent
