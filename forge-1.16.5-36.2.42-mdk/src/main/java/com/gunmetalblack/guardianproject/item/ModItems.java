@@ -1,9 +1,10 @@
 package com.gunmetalblack.guardianproject.item;
 
 import com.gunmetalblack.guardianproject.GuardianProjectMod;
-import com.gunmetalblack.guardianproject.item.custom.SingleUseSigil;
+import com.gunmetalblack.guardianproject.item.custom.sigil.MortalPotionSigil;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.potion.Effects;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -13,9 +14,13 @@ public class ModItems {
 
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, GuardianProjectMod.MOD_ID);
-
+    //MORTAL SIGILS
     public static final RegistryObject<Item> BLANK_SIGIL = ITEMS.register("blank_sigil",
-            ()-> new SingleUseSigil(new Item.Properties().tab(ItemGroup.TAB_MATERIALS)));
+            () -> new MortalPotionSigil(
+                    new Item.Properties().tab(ItemGroup.TAB_MATERIALS),
+                    Effects.DAMAGE_BOOST, // The effect
+                    1000                   // The base duration in ticks
+            ));
 
     public static void register(IEventBus eventBus) {ITEMS.register(eventBus);}
 }
