@@ -1,7 +1,6 @@
 package com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder;
 
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
-import net.minecraftforge.fml.RegistryObject;
 
 import java.util.ArrayList;
 
@@ -9,7 +8,7 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
 
     int sacrficeSigilStage = 0;
     float sacrficeSigilDuration = 0;
-    ArrayList<RegistryObject<AbstractSigilItem>> activeSigils = new ArrayList<>();
+    ArrayList<AbstractSigilItem> activeSigils = new ArrayList<>();
 
     @Override
     public int getSacrficeSigilStage() {
@@ -37,7 +36,7 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
     }
 
     @Override
-    public ArrayList<RegistryObject<AbstractSigilItem>> getActiveSigils() {
+    public ArrayList<AbstractSigilItem> getActiveSigils() {
         return activeSigils;
     }
 }

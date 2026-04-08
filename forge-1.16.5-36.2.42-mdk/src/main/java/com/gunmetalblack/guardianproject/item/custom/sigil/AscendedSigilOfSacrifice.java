@@ -2,7 +2,6 @@ package com.gunmetalblack.guardianproject.item.custom.sigil;
 
 import com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
-import com.gunmetalblack.guardianproject.item.ModItems;
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
@@ -21,8 +20,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     protected void onSigilTrigger(PlayerEntity player, World world, float power) {
         //Set the level of stage for the sacrifice sigil power
       IGaurdianPlayerDataHolderCapability playerData = grabPlayerCapability(player);
-      playerData.getActiveSigils().add(ModItems.SACRIFICE_SIGIL);
-
+      playerData.getActiveSigils().add(this);
        if(playerData.getSacrficeSigilStage() == 0) {
            playerData.setSacrficeSigilStage(1);
            playerData.setSacrificeSigilTDuration(6000);

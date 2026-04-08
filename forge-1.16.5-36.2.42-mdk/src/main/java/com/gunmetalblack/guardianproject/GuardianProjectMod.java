@@ -5,6 +5,7 @@ import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdatahol
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapabilityStorage;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
 import com.gunmetalblack.guardianproject.item.ModItems;
+import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
@@ -103,6 +104,11 @@ public class GuardianProjectMod
     public static void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
         //Grab Player then Cap ability
+        IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability(event.player);
+        for(AbstractSigilItem sigil : playerdata.getActiveSigils())
+        {
+               
+        }
     }
 
     @SubscribeEvent
