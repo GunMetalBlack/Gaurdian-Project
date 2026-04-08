@@ -1,9 +1,18 @@
 package com.gunmetalblack.guardianproject;
 
+import com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities;
+import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapabilityProvider;
+import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapabilityStorage;
+import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
 import com.gunmetalblack.guardianproject.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -46,20 +55,15 @@ public class GuardianProjectMod
 
     private void setup(final FMLCommonSetupEvent event)
     {
-        // some preinit code
-        LOGGER.info("HELLO FROM PREINIT");
-        LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
         // do something that can only be done on the client
-        LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().options);
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event)
     {
         // some example code to dispatch IMC to another mod
-        InterModComms.sendTo("examplemod", "helloworld", () -> { LOGGER.info("Hello world from the MDK"); return "Hello world";});
     }
 
     private void processIMC(final InterModProcessEvent event)
@@ -74,6 +78,18 @@ public class GuardianProjectMod
     public void onServerStarting(FMLServerStartingEvent event) {
         // do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    @SubscribeEvent
+    public static void onCommonSetupEvent(final FMLCommonSetupEvent event) {
+        CapabilityManager.INSTANCE.register(IGaurdianPlayerDataHolderCapability.class, new GuardianPlayerDataHolderCapabilityStorage(), () -> null);
+    }
+
+    @SubscribeEvent
+    public static void onAttachCapabilitiesEventEntity(final AttachCapabilitiesEvent<Entity> event) {
+        if(event.getObject() instanceof PlayerEntity) {
+            event.addCapability(new ResourceLocation(GuardianProjectMod.MOD_ID, "guardian_player_data_holder"), new GuardianPlayerDataHolderCapabilityProvider());
+        }
     }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD

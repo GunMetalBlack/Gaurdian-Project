@@ -15,12 +15,20 @@ public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, GuardianProjectMod.MOD_ID);
     //MORTAL SIGILS
-    public static final RegistryObject<Item> BLANK_SIGIL = ITEMS.register("blank_sigil",
+    public static final RegistryObject<Item> LESSER_STRENGTH_SIGIL = ITEMS.register("lesser_strength_sigil",
             () -> new MortalPotionSigil(
                     new Item.Properties().tab(ItemGroup.TAB_MATERIALS),
                     Effects.DAMAGE_BOOST, // The effect
                     1000                   // The base duration in ticks
             ));
+    //Ascended SIGILS
+
+
+
+    //CRAFTING ITEMS
+    public static final RegistryObject<Item> BLANK_SIGIL = ITEMS.register("blank_sigil",
+            () -> new Item(
+                    new Item.Properties().tab(ItemGroup.TAB_MATERIALS)));
 
     public static void register(IEventBus eventBus) {ITEMS.register(eventBus);}
 }
