@@ -70,7 +70,7 @@ public abstract class AbstractSigilItem extends Item {
         }
     }
 
-    protected void onPlayerTick(PlayerEntity player)
+    public void onPlayerTick(PlayerEntity player)
     {
 
     }

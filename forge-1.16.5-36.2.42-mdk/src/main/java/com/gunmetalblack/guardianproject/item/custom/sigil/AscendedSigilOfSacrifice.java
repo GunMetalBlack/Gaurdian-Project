@@ -34,7 +34,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     }
 
     @Override
-    protected void onPlayerTick(PlayerEntity player) {
+    public void onPlayerTick(PlayerEntity player) {
         super.onPlayerTick(player);
     }
 }

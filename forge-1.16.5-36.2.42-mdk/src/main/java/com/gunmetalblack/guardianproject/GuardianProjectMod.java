@@ -107,7 +107,7 @@ public class GuardianProjectMod
         IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability(event.player);
         for(AbstractSigilItem sigil : playerdata.getActiveSigils())
         {
-               
+               sigil.onPlayerTick(event.player);
         }
     }
 
