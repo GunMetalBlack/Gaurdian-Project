@@ -18,12 +18,14 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public abstract class AbstractSigilItem extends Item {
+    protected Effect originalEffect;
     protected Effect effect;
     private final int baseDuration;
 
     public AbstractSigilItem(Properties properties, Effect effect, int baseDuration) {
         super(properties);
         this.effect = effect;
+        originalEffect = effect;
         this.baseDuration = baseDuration;
     }
 
@@ -51,7 +53,7 @@ public abstract class AbstractSigilItem extends Item {
                     spawnSigilParticlesOnPlayer(world, player,ParticleTypes.ENCHANT,0.5f, power,0.5,0.03);
 
                     // 3. Potion Logic
-                    applyPotionEffect(player, power);
+                    applyConstructorPotionEffect(player, power);
 
                     // 4. Custom subclass logic
                     onSigilTrigger(player, world, power);
@@ -64,11 +66,21 @@ public abstract class AbstractSigilItem extends Item {
         }
     }
 
-    protected void applyPotionEffect(PlayerEntity player, float power) {
+    protected void applyConstructorPotionEffect(PlayerEntity player, float power) {
         int scaledDuration = (int)(this.baseDuration * power);
         if (scaledDuration > 0) {
             player.addEffect(new EffectInstance(this.effect, scaledDuration, 2));
         }
+    }
+
+    /**
+     * Override this in subclasses to change control what potion effect is applied then change it back to the original for future use.
+     */
+    protected void applyPotionEffect(PlayerEntity player, float power,Effect newPotionEffect)
+    {
+        this.effect = newPotionEffect;
+        applyConstructorPotionEffect(player, power);
+        this.originalEffect = newPotionEffect;
     }
 
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event )

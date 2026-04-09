@@ -3,6 +3,7 @@ package com.gunmetalblack.guardianproject.item.custom.sigil;
 import com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
@@ -11,6 +12,7 @@ import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -21,11 +23,11 @@ import net.minecraft.util.SoundEvents;
 import static com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities.grabPlayerCapability;
 public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     //Controls how long the damage ability lasts
-    int baseSigilDuration = 3000;
+    int baseSigilDuration = 0;
 
     public AscendedSigilOfSacrifice(Properties properties, Effect effect, int baseDuration) {
         super(properties, effect, baseDuration);
-        //baseSigilDuration = baseDuration;
+        baseSigilDuration = baseDuration;
     }
 
     @Override
@@ -41,6 +43,9 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
            playerData.setSacrficeSigilStage(1);
            //Sets the duration of the damage boost
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
+
+           applyPotionEffect(player, 1, Effects.MOVEMENT_SPEED);
+
            //Punishment for the players health
            setPlayerHeathOffset(0.15f,playerData,healthAttr,player);
            //Cool text and player feedback
@@ -49,6 +54,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
            playerData.setSacrficeSigilStage(2);
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
            setPlayerHeathOffset(0.30f,playerData,healthAttr,player);
+           applyPotionEffect(player, 2, Effects.MOVEMENT_SPEED);
            player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §6Your blood begins to hum with power."), true);
        }else if (playerData.getSacrficeSigilStage() == 2) {
 
@@ -56,7 +62,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
             //Set what pecentage of the players health they are losing
            setPlayerHeathOffset(0.65f,playerData,healthAttr,player);
 
-
+           applyPotionEffect(player, 4, Effects.MOVEMENT_SPEED);
            //Effect for final form
            spawnSigilParticlesOnPlayer(world, player,ParticleTypes.FLASH,20f, 12,0.5,0.01);
            world.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -71,19 +77,36 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     @Override
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event)
     {
-        //Multiplies the damage output of the player
         IGaurdianPlayerDataHolderCapability playerData = grabPlayerCapability(player);
-        if(playerData.getSacrficeSigilStage() != 0) {
+        int stage = playerData.getSacrficeSigilStage();
+
+        if(stage != 0) {
             float damageBeingDelt = event.getAmount();
-            if (playerData.getSacrficeSigilStage() == 1) {
-                damageBeingDelt = damageBeingDelt * 1.5f;
-            } else if (playerData.getSacrficeSigilStage() == 2) {
-                damageBeingDelt = damageBeingDelt * 3f;
-            } else if (playerData.getSacrficeSigilStage() == 3) {
-                damageBeingDelt = damageBeingDelt * 10f;
+            LivingEntity victim = event.getEntityLiving();
+
+            // 1. Handle Damage Scaling
+            if (stage == 1) {
+                damageBeingDelt *= 1.5f;
+                applyCustomKnockback(victim, player, 0.5F); // Standard knockback
+            } else if (stage == 2) {
+                damageBeingDelt *= 3f;
+                applyCustomKnockback(victim, player, 1.5F); // Strong knockback
+            } else if (stage == 3) {
+                damageBeingDelt *= 10f;
+                applyCustomKnockback(victim, player, 5.0F); // "Yeet" level knockback
             }
+
             event.setAmount(damageBeingDelt);
         }
+    }
+
+    // Helper method to keep your code clean
+    private void applyCustomKnockback(LivingEntity target, PlayerEntity attacker, float strength) {
+        // Math.sin/cos logic helps determine the horizontal direction based on the player's rotation
+        target.knockback(strength, MathHelper.sin(attacker.yRot * ((float)Math.PI / 180F)), -MathHelper.cos(attacker.yRot * ((float)Math.PI / 180F)));
+
+        // Ensure the client knows the entity moved
+        target.hurtMarked = true;
     }
 
     void setPlayerHeathOffset(float reducePercentage, IGaurdianPlayerDataHolderCapability playerData, ModifiableAttributeInstance healthAttr, PlayerEntity player) {
@@ -114,6 +137,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     public void onPlayerTick(PlayerEntity player) {
         IGaurdianPlayerDataHolderCapability playerData = grabPlayerCapability(player);
         //Get the player health attribute
+
         ModifiableAttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
         System.out.println("WHAT TICK THINKS MY HEALTH IS"+healthAttr.getBaseValue());
 
@@ -136,6 +160,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
             playerData.setSacrficeSigilStage(0);
             playerData.getActiveSigils().remove(this);
             playerData.setCurrentlyAppliedMaxHealthOffset(0);
+            applyPotionEffect(player, 1, Effects.WEAKNESS);
             player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §aThe sacrifice is concluded."), true);
         }
     }
@@ -143,5 +168,10 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     @Override
     protected void spawnSigilParticlesOnPlayer(World world, PlayerEntity player, IParticleData particle, float baseCount, float power, double spread, double speed) {
         super.spawnSigilParticlesOnPlayer(world, player, ParticleTypes.DAMAGE_INDICATOR, 15, 0.3f, 0.5, 0.02);
+    }
+
+    @Override
+    protected void applyPotionEffect(PlayerEntity player, float power,Effect newPotionEffect){
+        super.applyPotionEffect(player, power, newPotionEffect);
     }
 }

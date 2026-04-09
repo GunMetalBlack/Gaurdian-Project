@@ -28,7 +28,7 @@ public class ModItems {
             () -> new AscendedSigilOfSacrifice(
                     new Item.Properties().tab(ItemGroup.TAB_MATERIALS),
                     Effects.DAMAGE_RESISTANCE, // The effect
-                    6000                   // The base duration in ticks
+                    3000                   // The base duration in ticks
             ));
 
 
