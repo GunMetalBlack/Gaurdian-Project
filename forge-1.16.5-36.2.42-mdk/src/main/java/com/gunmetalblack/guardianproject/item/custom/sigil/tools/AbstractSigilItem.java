@@ -18,7 +18,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public abstract class AbstractSigilItem extends Item {
-    private final Effect effect;
+    protected Effect effect;
     private final int baseDuration;
 
     public AbstractSigilItem(Properties properties, Effect effect, int baseDuration) {
@@ -48,7 +48,7 @@ public abstract class AbstractSigilItem extends Item {
                             1.0F, 0.5F + (power * 0.5F));
 
                     // 2. Particles
-                    spawnSigilParticles(world, player, power);
+                    spawnSigilParticlesOnPlayer(world, player,ParticleTypes.ENCHANT,0.5f, power,0.5,0.03);
 
                     // 3. Potion Logic
                     applyPotionEffect(player, power);
@@ -78,17 +78,21 @@ public abstract class AbstractSigilItem extends Item {
     public void onPlayerTick(PlayerEntity player)
     {}
 
-    protected void spawnSigilParticles(World world, PlayerEntity player, float power) {
+    /**
+     * Override this in subclasses to change control what effect is displayed
+     */
+    protected void spawnSigilParticlesOnPlayer(World world, PlayerEntity player, IParticleData particle, float baseCount, float power, double spread, double speed) {
         if (world instanceof ServerWorld) {
             ServerWorld serverWorld = (ServerWorld) world;
-            int count = (int)(50 * power); // More charge = more particles
+            int count = (int)(baseCount * power);
 
-            // Default particles - can be changed in subclasses by overriding this method
-            serverWorld.sendParticles(getPrimaryParticle(),
+            serverWorld.sendParticles(particle,
                     player.getX(), player.getY() + 1.0, player.getZ(),
-                    count, 0.5, 0.5, 0.5, 0.03);
+                    count, spread, spread, spread, speed);
         }
     }
+
+
 
     /**
      * Override this in subclasses to change the color/type of the sigil's magic

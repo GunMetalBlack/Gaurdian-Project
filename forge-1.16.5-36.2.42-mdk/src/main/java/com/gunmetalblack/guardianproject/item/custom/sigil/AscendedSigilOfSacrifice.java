@@ -6,15 +6,23 @@ import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilIt
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
+import net.minecraft.potion.Effects;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.fml.RegistryObject;
-import org.spongepowered.asm.mixin.Interface;
+import net.minecraft.util.SoundEvents;
 
 import static com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities.grabPlayerCapability;
 public class AscendedSigilOfSacrifice extends AbstractSigilItem {
-    int baseSigilDuration = 1000;
+    //Controls how long the damage ability lasts
+    int baseSigilDuration = 3000;
+
     public AscendedSigilOfSacrifice(Properties properties, Effect effect, int baseDuration) {
         super(properties, effect, baseDuration);
         //baseSigilDuration = baseDuration;
@@ -29,19 +37,37 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         //Save the players current health to be reapplied latter
       playerData.getActiveSigils().add(this);
        if(playerData.getSacrficeSigilStage() == 0) {
+           //Moves the stage to next meaning next activation is for if statement 1
            playerData.setSacrficeSigilStage(1);
+           //Sets the duration of the damage boost
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
+           //Punishment for the players health
            setPlayerHeathOffset(0.15f,playerData,healthAttr,player);
+           //Cool text and player feedback
+           player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §fThe brand stings... vitality for strength."), true);
        } else if (playerData.getSacrficeSigilStage() == 1) {
            playerData.setSacrficeSigilStage(2);
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
            setPlayerHeathOffset(0.30f,playerData,healthAttr,player);
+           player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §6Your blood begins to hum with power."), true);
        }else if (playerData.getSacrficeSigilStage() == 2) {
+
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
-           setPlayerHeathOffset(0.45f,playerData,healthAttr,player);
+            //Set what pecentage of the players health they are losing
+           setPlayerHeathOffset(0.65f,playerData,healthAttr,player);
+
+
+           //Effect for final form
+           spawnSigilParticlesOnPlayer(world, player,ParticleTypes.FLASH,20f, 12,0.5,0.01);
+           world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                   SoundEvents.WITHER_DEATH, SoundCategory.PLAYERS,
+                   1.0F, 0.5F + (power * 0.5F));
+           world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                   SoundEvents.ENDER_DRAGON_HURT, SoundCategory.PLAYERS,
+                   1.0F, 0.5F + (power * 0.5F));
+           player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §c§lYOU ARE ASCENDING. THE PRICE IS PAID."), true);
        }
     }
-
     @Override
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event)
     {
@@ -52,9 +78,9 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
             if (playerData.getSacrficeSigilStage() == 1) {
                 damageBeingDelt = damageBeingDelt * 1.5f;
             } else if (playerData.getSacrficeSigilStage() == 2) {
-                damageBeingDelt = damageBeingDelt * 2f;
-            } else if (playerData.getSacrficeSigilStage() == 3) {
                 damageBeingDelt = damageBeingDelt * 3f;
+            } else if (playerData.getSacrficeSigilStage() == 3) {
+                damageBeingDelt = damageBeingDelt * 10f;
             }
             event.setAmount(damageBeingDelt);
         }
@@ -94,6 +120,11 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         playerData.printCurrentPlayerData();
         if(playerData.getSacrficeSigilStage() == 0) {return;}
 
+        if(playerData.getSacrificeSigilTDuration() == 200f)
+        {
+            player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §c§lYour soul grows weak, as does the sigil."), true);
+        }
+
         if(playerData.getSacrificeSigilTDuration() > 0)
         {
             playerData.setSacrificeSigilTDuration(playerData.getSacrificeSigilTDuration() - 1);
@@ -105,6 +136,12 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
             playerData.setSacrficeSigilStage(0);
             playerData.getActiveSigils().remove(this);
             playerData.setCurrentlyAppliedMaxHealthOffset(0);
+            player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §aThe sacrifice is concluded."), true);
         }
+    }
+
+    @Override
+    protected void spawnSigilParticlesOnPlayer(World world, PlayerEntity player, IParticleData particle, float baseCount, float power, double spread, double speed) {
+        super.spawnSigilParticlesOnPlayer(world, player, ParticleTypes.DAMAGE_INDICATOR, 15, 0.3f, 0.5, 0.02);
     }
 }
