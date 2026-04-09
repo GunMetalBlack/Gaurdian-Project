@@ -13,10 +13,11 @@ import net.minecraftforge.fml.RegistryObject;
 import org.spongepowered.asm.mixin.Interface;
 
 import static com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities.grabPlayerCapability;
-
 public class AscendedSigilOfSacrifice extends AbstractSigilItem {
+    int baseSigilDuration = 1000;
     public AscendedSigilOfSacrifice(Properties properties, Effect effect, int baseDuration) {
         super(properties, effect, baseDuration);
+        //baseSigilDuration = baseDuration;
     }
 
     @Override
@@ -29,15 +30,15 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
       playerData.getActiveSigils().add(this);
        if(playerData.getSacrficeSigilStage() == 0) {
            playerData.setSacrficeSigilStage(1);
-           playerData.setSacrificeSigilTDuration(6000);
-           setPlayerHeathOffset(3,playerData,healthAttr,player);
+           playerData.setSacrificeSigilTDuration(baseSigilDuration);
+           setPlayerHeathOffset(0.15f,playerData,healthAttr,player);
        } else if (playerData.getSacrficeSigilStage() == 1) {
            playerData.setSacrficeSigilStage(2);
-           playerData.setSacrificeSigilTDuration(6000);
-           setPlayerHeathOffset(6,playerData,healthAttr,player);
+           playerData.setSacrificeSigilTDuration(baseSigilDuration);
+           setPlayerHeathOffset(0.30f,playerData,healthAttr,player);
        }else if (playerData.getSacrficeSigilStage() == 2) {
-           playerData.setSacrificeSigilTDuration(6000);
-           setPlayerHeathOffset(9,playerData,healthAttr,player);
+           playerData.setSacrificeSigilTDuration(baseSigilDuration);
+           setPlayerHeathOffset(0.45f,playerData,healthAttr,player);
        }
     }
 
@@ -59,15 +60,28 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         }
     }
 
-    void setPlayerHeathOffset(float reduceHearts,IGaurdianPlayerDataHolderCapability playerData , ModifiableAttributeInstance healthAttr, PlayerEntity player)
-    {
-        //0 - 3
-        playerData.setCurrentlyAppliedMaxHealthOffset(playerData.getCurrentlyAppliedMaxHealthOffset()-reduceHearts);
+    void setPlayerHeathOffset(float reducePercentage, IGaurdianPlayerDataHolderCapability playerData, ModifiableAttributeInstance healthAttr, PlayerEntity player) {
+        // 1. Get the current base (e.g., 17) and remove our OLD offset (e.g., -3) to find the original (20)
+        float currentBase = (float) healthAttr.getBaseValue();
+        float trueBase = currentBase - playerData.getCurrentlyAppliedMaxHealthOffset();
 
-        //20-3 = 17
-        healthAttr.setBaseValue(healthAttr.getBaseValue()+playerData.getCurrentlyAppliedMaxHealthOffset());
+        // 2. Calculate the NEW offset from scratch based on the true base
+        // Example: Stage 2 (0.30f) of 20 hearts = 6 hearts reduction
+        float newOffset = -(trueBase * reducePercentage);
 
-        //player.setHealth(Math.min(player.getHealth(), (float) healthAttr.getBaseValue()));
+        // 3. Update the capability so we know what to subtract next time
+        playerData.setCurrentlyAppliedMaxHealthOffset(newOffset);
+
+        // 4. Calculate final health and CLAMP to 1.0 (half a heart)
+        float finalHealth = Math.max(1.0f, trueBase + newOffset);
+
+        // 5. Apply to the attribute
+        healthAttr.setBaseValue(finalHealth);
+
+        // 6. Sync current health
+        if (player.getHealth() > finalHealth) {
+            player.setHealth(finalHealth);
+        }
     }
 
     @Override
@@ -75,6 +89,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         IGaurdianPlayerDataHolderCapability playerData = grabPlayerCapability(player);
         //Get the player health attribute
         ModifiableAttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
+        System.out.println("WHAT TICK THINKS MY HEALTH IS"+healthAttr.getBaseValue());
 
         playerData.printCurrentPlayerData();
         if(playerData.getSacrficeSigilStage() == 0) {return;}
@@ -85,10 +100,10 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         }
         else
         {
+            //FIX THIS SHIT
+            healthAttr.setBaseValue(healthAttr.getBaseValue()-playerData.getCurrentlyAppliedMaxHealthOffset());
             playerData.setSacrficeSigilStage(0);
             playerData.getActiveSigils().remove(this);
-            //FIX THIS SHIT
-            healthAttr.setBaseValue(healthAttr.getBaseValue()+playerData.getCurrentlyAppliedMaxHealthOffset());
             playerData.setCurrentlyAppliedMaxHealthOffset(0);
         }
     }
