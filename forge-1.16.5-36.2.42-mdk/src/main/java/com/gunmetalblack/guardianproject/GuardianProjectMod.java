@@ -1,6 +1,7 @@
 package com.gunmetalblack.guardianproject;
 
 import com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities;
+import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapability;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapabilityProvider;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.GuardianPlayerDataHolderCapabilityStorage;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
@@ -11,6 +12,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -32,6 +34,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -53,9 +56,15 @@ public class GuardianProjectMod
         eventBus.addListener(this::processIMC);
         // Register the doClientStuff method for modloading
         eventBus.addListener(this::doClientStuff);
+        eventBus.addListener(GuardianProjectMod::onCommonSetupEvent);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.addGenericListener(Entity.class,GuardianProjectMod::onAttachCapabilitiesEventEntity);
+        MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerAttack);
+        MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerTick);
+        MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerClone);
+
     }
 
     private void setup(final FMLCommonSetupEvent event)
@@ -87,7 +96,7 @@ public class GuardianProjectMod
 
     @SubscribeEvent
     public static void onCommonSetupEvent(final FMLCommonSetupEvent event) {
-        CapabilityManager.INSTANCE.register(IGaurdianPlayerDataHolderCapability.class, new GuardianPlayerDataHolderCapabilityStorage(), () -> null);
+        CapabilityManager.INSTANCE.register(IGaurdianPlayerDataHolderCapability.class, new GuardianPlayerDataHolderCapabilityStorage(), GuardianPlayerDataHolderCapability::new);
     }
 
     @SubscribeEvent
@@ -96,7 +105,29 @@ public class GuardianProjectMod
         Entity attacker = event.getSource().getDirectEntity();
         if (attacker instanceof PlayerEntity)
         {
+            //Grab Player then Cap ability
+            IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability((PlayerEntity) attacker);
+            for(AbstractSigilItem sigil : playerdata.getActiveSigils())
+            {
+                //Call all the Sigil Abilities
+                sigil.onPlayerDealDamage((PlayerEntity) attacker, event);
+            }
+        }
+    }
 
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event)
+    {
+        if(event.isWasDeath()) {
+            IGaurdianPlayerDataHolderCapability original = event.getOriginal().getCapability(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER).orElse(null);
+            IGaurdianPlayerDataHolderCapability target = event.getPlayer().getCapability(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER).orElse(null);
+            if(original == null || target == null) {
+                System.out.println("Oopsie doopsie, I made a fuckie wucky! Got null capability when attempting to persist Phlax player data across death.");
+                return;
+            }
+            INBT originalNBT = GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage().writeNBT(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER, original, null);
+            GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage().readNBT(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER, target, null, originalNBT);
+            target.setCurrentlyAppliedMaxHealthOffset(0);
         }
     }
 
@@ -105,8 +136,12 @@ public class GuardianProjectMod
     {
         //Grab Player then Cap ability
         IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability(event.player);
-        for(AbstractSigilItem sigil : playerdata.getActiveSigils())
+        if(playerdata == null)
         {
+            System.out.println("YOUR PLAYER DATA IS FUCKING NULL");
+            return;
+        }
+        for (AbstractSigilItem sigil : playerdata.getActiveSigils().toArray(new AbstractSigilItem[0])) {
                sigil.onPlayerTick(event.player);
         }
     }

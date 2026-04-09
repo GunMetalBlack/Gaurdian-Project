@@ -3,11 +3,16 @@ package com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataho
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public interface IGaurdianPlayerDataHolderCapability {
     int getSacrficeSigilStage();
-    int setSacrficeSigilStage(int sigilStage);
-    float setSacrificeSigilTDuration(float tDuration);
+    void setSacrficeSigilStage(int sigilStage);
+    void setSacrificeSigilTDuration(float tDuration);
     float getSacrificeSigilTDuration();
-    ArrayList<AbstractSigilItem> getActiveSigils();
+    Set<AbstractSigilItem> getActiveSigils();
+    float getCurrentlyAppliedMaxHealthOffset();
+    void setCurrentlyAppliedMaxHealthOffset(float maxHealthOffset);
+    void printCurrentPlayerData();
 }

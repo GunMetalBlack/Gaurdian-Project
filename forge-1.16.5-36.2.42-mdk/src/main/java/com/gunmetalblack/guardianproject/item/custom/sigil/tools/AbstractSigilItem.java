@@ -15,6 +15,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public abstract class AbstractSigilItem extends Item {
     private final Effect effect;
@@ -70,10 +71,12 @@ public abstract class AbstractSigilItem extends Item {
         }
     }
 
-    public void onPlayerTick(PlayerEntity player)
-    {
+    public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event )
+    {}
 
-    }
+    //Tick Function for the player
+    public void onPlayerTick(PlayerEntity player)
+    {}
 
     protected void spawnSigilParticles(World world, PlayerEntity player, float power) {
         if (world instanceof ServerWorld) {

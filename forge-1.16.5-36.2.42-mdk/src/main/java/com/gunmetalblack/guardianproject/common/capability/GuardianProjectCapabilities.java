@@ -8,6 +8,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class GuardianProjectCapabilities {
     private GuardianProjectCapabilities(){}
+
     @CapabilityInject(IGaurdianPlayerDataHolderCapability.class)
     public static Capability<IGaurdianPlayerDataHolderCapability> GUARDIAN_PLAYER_DATA_HELPER;
 

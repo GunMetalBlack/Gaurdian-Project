@@ -24,6 +24,9 @@ public class GuardianPlayerDataHolderCapabilityProvider implements ICapabilitySe
 
     @Override
     public net.minecraft.nbt.INBT serializeNBT() {
+        System.out.println("GUN MAGIC");
+        System.out.println(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER);
+        System.out.println(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage());
         return GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage().writeNBT(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER, capabilityInstance, null);    }
 
     @Override
