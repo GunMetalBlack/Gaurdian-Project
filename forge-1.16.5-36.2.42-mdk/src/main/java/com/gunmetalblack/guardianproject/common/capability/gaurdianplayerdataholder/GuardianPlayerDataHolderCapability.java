@@ -8,20 +8,15 @@ import java.util.Set;
 
 public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHolderCapability{
 
-    int sacrficeSigilStage = 0;
-    float sacrficeSigilDuration = 0;
-    float maxHealthOffset = 0;
-    Set<AbstractSigilItem> activeSigils = new HashSet<>();
+    private int sacrficeSigilStage = 0;
+    private float sacrficeSigilDuration = 0;
+    private float maxHealthOffset = 0;
+    private final Set<AbstractSigilItem> activeSigils = new HashSet<>();
 
     @Override
     public void printCurrentPlayerData()
     {
-        System.out.println("====PLAYER DATA====");
-        System.out.println("Sacrfice Sigil Stage: " + sacrficeSigilStage);
-        System.out.println("Sacrfice Sigil Duration: " + sacrficeSigilDuration);
-        System.out.println("Max Health Offset: " + maxHealthOffset);
-        System.out.println("Active Sigils: " + activeSigils);
-        System.out.println("===================");
+        // Kept as a capability API hook; callers may add structured logging when needed.
     }
 
     @Override
@@ -36,7 +31,7 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
     public void setSacrficeSigilStage(int sigilStage) {
         this.sacrficeSigilStage = sigilStage;
         if (sacrficeSigilStage < 0) {sacrficeSigilStage = 0;}
-        if (sacrficeSigilStage > 2) {sacrficeSigilStage = 2;}
+        if (sacrficeSigilStage > 3) {sacrficeSigilStage = 3;}
     }
 
     @Override
@@ -56,13 +51,19 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
 
     @Override
     public float getCurrentlyAppliedMaxHealthOffset() {
-        System.out.println("GET MAX HEALTH OFFSET:" + maxHealthOffset);
         return maxHealthOffset;
     }
 
     @Override
     public void setCurrentlyAppliedMaxHealthOffset(float maxHealthOffset) {
-        System.out.println("SET MAX HEALTH OFFSET:" + maxHealthOffset);
         this.maxHealthOffset = maxHealthOffset;
+    }
+
+    @Override
+    public void clearActiveEffects() {
+        sacrficeSigilStage = 0;
+        sacrficeSigilDuration = 0;
+        maxHealthOffset = 0;
+        activeSigils.clear();
     }
 }

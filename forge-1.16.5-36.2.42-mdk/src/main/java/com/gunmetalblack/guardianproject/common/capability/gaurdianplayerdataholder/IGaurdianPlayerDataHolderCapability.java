@@ -14,5 +14,6 @@ public interface IGaurdianPlayerDataHolderCapability {
     Set<AbstractSigilItem> getActiveSigils();
     float getCurrentlyAppliedMaxHealthOffset();
     void setCurrentlyAppliedMaxHealthOffset(float maxHealthOffset);
+    void clearActiveEffects();
     void printCurrentPlayerData();
 }

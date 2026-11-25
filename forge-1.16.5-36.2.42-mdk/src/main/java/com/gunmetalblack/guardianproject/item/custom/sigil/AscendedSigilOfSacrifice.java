@@ -86,14 +86,14 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
 
             // 1. Handle Damage Scaling
             if (stage == 1) {
-                damageBeingDelt *= 1.5f;
+                damageBeingDelt *= 5f;
                 applyCustomKnockback(victim, player, 0.5F); // Standard knockback
             } else if (stage == 2) {
-                damageBeingDelt *= 3f;
+                damageBeingDelt *= 10f;
                 applyCustomKnockback(victim, player, 1.5F); // Strong knockback
             } else if (stage == 3) {
-                damageBeingDelt *= 10f;
-                applyCustomKnockback(victim, player, 5.0F); // "Yeet" level knockback
+                damageBeingDelt *= 100f;
+                applyCustomKnockback(victim, player, 20.0F); // "Yeet" level knockback
             }
 
             event.setAmount(damageBeingDelt);

@@ -19,7 +19,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public abstract class AbstractSigilItem extends Item {
     protected Effect originalEffect;
-    protected Effect effect;
+    protected final Effect effect;
     private final int baseDuration;
 
     public AbstractSigilItem(Properties properties, Effect effect, int baseDuration) {
@@ -78,9 +78,10 @@ public abstract class AbstractSigilItem extends Item {
      */
     protected void applyPotionEffect(PlayerEntity player, float power,Effect newPotionEffect)
     {
-        this.effect = newPotionEffect;
-        applyConstructorPotionEffect(player, power);
-        this.originalEffect = newPotionEffect;
+        int scaledDuration = (int) (this.baseDuration * power);
+        if (scaledDuration > 0) {
+            player.addEffect(new EffectInstance(newPotionEffect, scaledDuration, 2));
+        }
     }
 
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event )
