@@ -8,9 +8,7 @@ import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdatahol
 import com.gunmetalblack.guardianproject.item.ModItems;
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.ResourceLocation;
@@ -34,7 +32,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -43,12 +40,15 @@ public class GuardianProjectMod
 {
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
-    public static String MOD_ID = "guardian_project";
+    public static final String MOD_ID = "guardian_project";
 
     public GuardianProjectMod() {
         // Register the setup method for modloading
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.register(eventBus);
+        com.gunmetalblack.guardianproject.common.ModEntities.ENTITIES.register(eventBus);
+        com.gunmetalblack.guardianproject.common.MartyrdomJump.register();
+        com.gunmetalblack.guardianproject.common.ModEffects.EFFECTS.register(eventBus);
         eventBus.addListener(this::setup);
         // Register the enqueueIMC method for modloading
         eventBus.addListener(this::enqueueIMC);
@@ -62,6 +62,7 @@ public class GuardianProjectMod
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addGenericListener(Entity.class,GuardianProjectMod::onAttachCapabilitiesEventEntity);
         MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerAttack);
+        MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerAttacked);
         MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerTick);
         MinecraftForge.EVENT_BUS.addListener(GuardianProjectMod::onPlayerClone);
 
@@ -100,14 +101,34 @@ public class GuardianProjectMod
     }
 
     @SubscribeEvent
+    public static void onPlayerAttacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (event.getEntityLiving().level.isClientSide || !(event.getEntityLiving() instanceof PlayerEntity)) return;
+        PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        IGaurdianPlayerDataHolderCapability data = GuardianProjectCapabilities.grabPlayerCapability(player);
+        if (data == null) return;
+        for (AbstractSigilItem sigil : data.getActiveSigils().toArray(new AbstractSigilItem[0])) {
+            sigil.onPlayerAttacked(player, event);
+            if (event.isCanceled()) break;
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerAttack(LivingHurtEvent event)
     {
-        Entity attacker = event.getSource().getDirectEntity();
+        if (event.getEntityLiving().level.isClientSide) return;
+        if (event.getEntityLiving() instanceof PlayerEntity) {
+            PlayerEntity victim = (PlayerEntity) event.getEntityLiving();
+            IGaurdianPlayerDataHolderCapability data = GuardianProjectCapabilities.grabPlayerCapability(victim);
+            if (data != null) for (AbstractSigilItem sigil : data.getActiveSigils().toArray(new AbstractSigilItem[0]))
+                sigil.onPlayerTakeDamage(victim, event);
+        }
+        Entity attacker = event.getSource().getEntity();
         if (attacker instanceof PlayerEntity)
         {
             //Grab Player then Cap ability
             IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability((PlayerEntity) attacker);
-            for(AbstractSigilItem sigil : playerdata.getActiveSigils())
+            if (playerdata == null) return;
+            for(AbstractSigilItem sigil : playerdata.getActiveSigils().toArray(new AbstractSigilItem[0]))
             {
                 //Call all the Sigil Abilities
                 sigil.onPlayerDealDamage((PlayerEntity) attacker, event);
@@ -122,23 +143,22 @@ public class GuardianProjectMod
             IGaurdianPlayerDataHolderCapability original = event.getOriginal().getCapability(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER).orElse(null);
             IGaurdianPlayerDataHolderCapability target = event.getPlayer().getCapability(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER).orElse(null);
             if(original == null || target == null) {
-                System.out.println("Oopsie doopsie, I made a fuckie wucky! Got null capability when attempting to persist Phlax player data across death.");
+                LOGGER.warn("Could not transfer guardian player data across death because a capability was missing.");
                 return;
             }
-            INBT originalNBT = GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage().writeNBT(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER, original, null);
-            GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER.getStorage().readNBT(GuardianProjectCapabilities.GUARDIAN_PLAYER_DATA_HELPER, target, null, originalNBT);
-            target.setCurrentlyAppliedMaxHealthOffset(0);
+            target.clearActiveEffects();
         }
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
+        if (event.phase != TickEvent.Phase.END || event.player.level.isClientSide) return;
         //Grab Player then Cap ability
         IGaurdianPlayerDataHolderCapability playerdata = GuardianProjectCapabilities.grabPlayerCapability(event.player);
         if(playerdata == null)
         {
-            System.out.println("YOUR PLAYER DATA IS FUCKING NULL");
+            LOGGER.warn("Player capability missing during tick for {}", event.player.getGameProfile().getName());
             return;
         }
         for (AbstractSigilItem sigil : playerdata.getActiveSigils().toArray(new AbstractSigilItem[0])) {
@@ -149,7 +169,9 @@ public class GuardianProjectMod
     @SubscribeEvent
     public static void onAttachCapabilitiesEventEntity(final AttachCapabilitiesEvent<Entity> event) {
         if(event.getObject() instanceof PlayerEntity) {
-            event.addCapability(new ResourceLocation(GuardianProjectMod.MOD_ID, "guardian_player_data_holder"), new GuardianPlayerDataHolderCapabilityProvider());
+            GuardianPlayerDataHolderCapabilityProvider provider = new GuardianPlayerDataHolderCapabilityProvider();
+            event.addCapability(new ResourceLocation(GuardianProjectMod.MOD_ID, "guardian_player_data_holder"), provider);
+            event.addListener(provider::invalidate);
         }
     }
 

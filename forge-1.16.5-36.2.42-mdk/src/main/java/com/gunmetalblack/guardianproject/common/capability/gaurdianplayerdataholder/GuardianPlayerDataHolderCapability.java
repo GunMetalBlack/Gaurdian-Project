@@ -12,6 +12,10 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
     private float sacrficeSigilDuration = 0;
     private float maxHealthOffset = 0;
     private final Set<AbstractSigilItem> activeSigils = new HashSet<>();
+    private final net.minecraft.nbt.CompoundNBT sigilData = new net.minecraft.nbt.CompoundNBT();
+
+    @Override
+    public net.minecraft.nbt.CompoundNBT getSigilData() { return sigilData; }
 
     @Override
     public void printCurrentPlayerData()
@@ -65,5 +69,6 @@ public class GuardianPlayerDataHolderCapability implements IGaurdianPlayerDataHo
         sacrficeSigilDuration = 0;
         maxHealthOffset = 0;
         activeSigils.clear();
+        for (String key : new java.util.HashSet<>(sigilData.getAllKeys())) sigilData.remove(key);
     }
 }

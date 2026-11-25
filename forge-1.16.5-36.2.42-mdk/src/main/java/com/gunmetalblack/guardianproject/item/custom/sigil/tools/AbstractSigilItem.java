@@ -87,6 +87,9 @@ public abstract class AbstractSigilItem extends Item {
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event )
     {}
 
+    public void onPlayerTakeDamage(PlayerEntity player, LivingHurtEvent event) {}
+    public void onPlayerAttacked(PlayerEntity player, net.minecraftforge.event.entity.living.LivingAttackEvent event) {}
+
     //Tick Function for the player
     public void onPlayerTick(PlayerEntity player)
     {}

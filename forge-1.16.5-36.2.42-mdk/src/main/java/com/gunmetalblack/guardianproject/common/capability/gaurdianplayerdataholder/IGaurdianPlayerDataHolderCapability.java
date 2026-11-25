@@ -15,5 +15,6 @@ public interface IGaurdianPlayerDataHolderCapability {
     float getCurrentlyAppliedMaxHealthOffset();
     void setCurrentlyAppliedMaxHealthOffset(float maxHealthOffset);
     void clearActiveEffects();
+    net.minecraft.nbt.CompoundNBT getSigilData();
     void printCurrentPlayerData();
 }

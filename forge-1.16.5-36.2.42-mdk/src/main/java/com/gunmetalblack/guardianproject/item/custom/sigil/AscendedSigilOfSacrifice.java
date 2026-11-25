@@ -1,6 +1,5 @@
 package com.gunmetalblack.guardianproject.item.custom.sigil;
 
-import com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities;
 import com.gunmetalblack.guardianproject.common.capability.gaurdianplayerdataholder.IGaurdianPlayerDataHolderCapability;
 import com.gunmetalblack.guardianproject.item.custom.sigil.tools.AbstractSigilItem;
 import net.minecraft.entity.LivingEntity;
@@ -9,21 +8,21 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.particles.RedstoneParticleData;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraft.util.SoundEvents;
 
 import static com.gunmetalblack.guardianproject.common.capability.GuardianProjectCapabilities.grabPlayerCapability;
 public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     //Controls how long the damage ability lasts
-    int baseSigilDuration = 0;
+    private final int baseSigilDuration;
 
     public AscendedSigilOfSacrifice(Properties properties, Effect effect, int baseDuration) {
         super(properties, effect, baseDuration);
@@ -37,6 +36,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
       //Get the player health attribute
         ModifiableAttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
         //Save the players current health to be reapplied latter
+      if (playerData == null) return;
       playerData.getActiveSigils().add(this);
        if(playerData.getSacrficeSigilStage() == 0) {
            //Moves the stage to next meaning next activation is for if statement 1
@@ -57,7 +57,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
            applyPotionEffect(player, 2, Effects.MOVEMENT_SPEED);
            player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §6Your blood begins to hum with power."), true);
        }else if (playerData.getSacrficeSigilStage() == 2) {
-
+           playerData.setSacrficeSigilStage(3);
            playerData.setSacrificeSigilTDuration(baseSigilDuration);
             //Set what pecentage of the players health they are losing
            setPlayerHeathOffset(0.65f,playerData,healthAttr,player);
@@ -78,6 +78,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     public void onPlayerDealDamage(PlayerEntity player, LivingHurtEvent event)
     {
         IGaurdianPlayerDataHolderCapability playerData = grabPlayerCapability(player);
+        if (playerData == null) return;
         int stage = playerData.getSacrficeSigilStage();
 
         if(stage != 0) {
@@ -92,10 +93,9 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
                 damageBeingDelt *= 10f;
                 applyCustomKnockback(victim, player, 1.5F); // Strong knockback
             } else if (stage == 3) {
-                damageBeingDelt *= 100f;
+                damageBeingDelt *= 20f;
                 applyCustomKnockback(victim, player, 20.0F); // "Yeet" level knockback
             }
-
             event.setAmount(damageBeingDelt);
         }
     }
@@ -103,7 +103,7 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
     // Helper method to keep your code clean
     private void applyCustomKnockback(LivingEntity target, PlayerEntity attacker, float strength) {
         // Math.sin/cos logic helps determine the horizontal direction based on the player's rotation
-        target.knockback(strength, MathHelper.sin(attacker.yRot * ((float)Math.PI / 180F)), -MathHelper.cos(attacker.yRot * ((float)Math.PI / 180F)));
+        com.gunmetalblack.guardianproject.common.BlockBreakingKnockback.launch(target, attacker, strength);
 
         // Ensure the client knows the entity moved
         target.hurtMarked = true;
@@ -139,10 +139,8 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
         //Get the player health attribute
 
         ModifiableAttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
-        System.out.println("WHAT TICK THINKS MY HEALTH IS"+healthAttr.getBaseValue());
-
-        playerData.printCurrentPlayerData();
-        if(playerData.getSacrficeSigilStage() == 0) {return;}
+        if (healthAttr == null) return;
+        if (playerData == null || playerData.getSacrficeSigilStage() == 0) return;
 
         if(playerData.getSacrificeSigilTDuration() == 200f)
         {
@@ -151,17 +149,47 @@ public class AscendedSigilOfSacrifice extends AbstractSigilItem {
 
         if(playerData.getSacrificeSigilTDuration() > 0)
         {
+            if (playerData.getSacrficeSigilStage() == 3 && player.tickCount % 4 == 0) {
+                spawnRedLightning(player);
+            }
             playerData.setSacrificeSigilTDuration(playerData.getSacrificeSigilTDuration() - 1);
         }
         else
         {
             //FIX THIS SHIT
-            healthAttr.setBaseValue(healthAttr.getBaseValue()-playerData.getCurrentlyAppliedMaxHealthOffset());
+            healthAttr.setBaseValue(Math.max(1.0D, healthAttr.getBaseValue()-playerData.getCurrentlyAppliedMaxHealthOffset()));
             playerData.setSacrficeSigilStage(0);
-            playerData.getActiveSigils().remove(this);
+            playerData.setSacrificeSigilTDuration(0);
             playerData.setCurrentlyAppliedMaxHealthOffset(0);
+            playerData.getActiveSigils().remove(this);
             applyPotionEffect(player, 1, Effects.WEAKNESS);
             player.displayClientMessage(new StringTextComponent("§7[§4Sigil§7] §aThe sacrifice is concluded."), true);
+        }
+    }
+
+    /** Short jagged particle bolts around the body, without lightning damage or fire. */
+    private void spawnRedLightning(PlayerEntity player) {
+        if (!(player.level instanceof ServerWorld)) return;
+        ServerWorld world = (ServerWorld) player.level;
+        RedstoneParticleData red = new RedstoneParticleData(1.0F, 0.02F, 0.02F, 0.7F);
+        java.util.Random random = player.getRandom();
+        for (int bolt = 0; bolt < 3; bolt++) {
+            double angle = random.nextDouble() * Math.PI * 2;
+            double radius = player.getBbWidth() * 0.5 + 0.25;
+            double x = player.getX() + Math.cos(angle) * radius;
+            double z = player.getZ() + Math.sin(angle) * radius;
+            double y = player.getY() + random.nextDouble() * player.getBbHeight() * 0.4;
+            for (int segment = 0; segment < 5; segment++) {
+                double nextX = x + (random.nextDouble() - 0.5) * 0.4;
+                double nextZ = z + (random.nextDouble() - 0.5) * 0.4;
+                double nextY = y + 0.15 + random.nextDouble() * 0.15;
+                for (int point = 0; point < 4; point++) {
+                    double t = point / 4.0;
+                    world.sendParticles(red, x + (nextX - x) * t, y + (nextY - y) * t,
+                            z + (nextZ - z) * t, 1, 0, 0, 0, 0);
+                }
+                x = nextX; y = nextY; z = nextZ;
+            }
         }
     }
 

@@ -1,4 +1,17 @@
 {
+  "itemGroup.guardian_project_sigils": "Sigils",
   "item.guardian_project.blank_sigil": "Blank Sigil",
-  "item.guardian_project.lesser_strength_sigil": "Lesser Strength Sigil"
+  "item.guardian_project.calamity_sigil": "Sigil of Calamity",
+  "item.guardian_project.tragedy_sigil": "Sigil of Tragedy",
+  "entity.guardian_project.meteor": "Meteor",
+  "effect.guardian_project.tragedy_target": "Meteor Target",
+  "item.guardian_project.destruction_sigil": "Sigil of Destruction",
+  "item.guardian_project.healing_sigil": "Sigil of Healing",
+  "item.guardian_project.vigor_sigil": "Sigil of Vigor",
+  "effect.guardian_project.vigor_shield": "Vigor Shield",
+  "item.guardian_project.lesser_strength_sigil": "Lesser Strength Sigil",
+  "item.guardian_project.sacrifice_sigil": "Sacrifice Sigil",
+  "item.guardian_project.martyrdom_sigil": "Sigil of Martyrdom",
+  "effect.guardian_project.crippled": "Crippled",
+  "effect.guardian_project.martyrdom": "Martyrdom"
 }
