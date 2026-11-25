@@ -91,6 +91,7 @@ public final class MagicCircleRenderer {
                 double y = MathHelper.lerp(partial, player.yOld, player.getY()) - camera.y;
                 double z = MathHelper.lerp(partial, player.zOld, player.getZ()) - camera.z;
                 float time = player.tickCount + partial;
+                if (player.hasEffect(ModEffects.DIVINE_EYWA.get())) EywaVisuals.halo(matrices, x, y, z, time);
                 if (player.hasEffect(ModEffects.CALAMITY_BEAM.get())) CalamityBeamRenderer.draw(matrices, x, y, z, time);
                 for (SpellVisual visual : VISUALS) {
                     if (!visual.active.test(player)) continue;

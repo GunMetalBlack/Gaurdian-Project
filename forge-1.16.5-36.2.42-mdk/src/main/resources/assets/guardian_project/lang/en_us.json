@@ -1,5 +1,7 @@
 {
   "itemGroup.guardian_project_sigils": "Sigils",
+  "item.guardian_project.divine_eywa_sigil": "Sigil of Divine Eywa",
+  "effect.guardian_project.divine_eywa": "Divine Eywa",
   "item.guardian_project.blank_sigil": "Blank Sigil",
   "item.guardian_project.calamity_sigil": "Sigil of Calamity",
   "item.guardian_project.tragedy_sigil": "Sigil of Tragedy",

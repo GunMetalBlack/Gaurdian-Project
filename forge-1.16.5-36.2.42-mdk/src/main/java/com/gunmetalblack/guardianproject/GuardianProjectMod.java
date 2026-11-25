@@ -102,6 +102,7 @@ public class GuardianProjectMod
 
     @SubscribeEvent
     public static void onPlayerAttacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (com.gunmetalblack.guardianproject.common.EywaDamageLedger.isInternalDamage()) return;
         if (event.getEntityLiving().level.isClientSide || !(event.getEntityLiving() instanceof PlayerEntity)) return;
         PlayerEntity player = (PlayerEntity) event.getEntityLiving();
         IGaurdianPlayerDataHolderCapability data = GuardianProjectCapabilities.grabPlayerCapability(player);
@@ -115,6 +116,7 @@ public class GuardianProjectMod
     @SubscribeEvent
     public static void onPlayerAttack(LivingHurtEvent event)
     {
+        if (com.gunmetalblack.guardianproject.common.EywaDamageLedger.isInternalDamage()) return;
         if (event.getEntityLiving().level.isClientSide) return;
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity victim = (PlayerEntity) event.getEntityLiving();

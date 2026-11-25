@@ -11,6 +11,7 @@ import net.minecraftforge.fml.RegistryObject;
 
 public final class ModEffects {
     public static final DeferredRegister<Effect> EFFECTS = DeferredRegister.create(ForgeRegistries.POTIONS, GuardianProjectMod.MOD_ID);
+    public static final RegistryObject<Effect> DIVINE_EYWA = EFFECTS.register("divine_eywa", () -> new Effect(EffectType.BENEFICIAL, 0xFFEBA0) {});
     public static final RegistryObject<Effect> CALAMITY_BEAM = EFFECTS.register("calamity_beam", () -> new Effect(EffectType.NEUTRAL, 0xFF5511) {});
     public static final RegistryObject<Effect> TRAGEDY_TARGET = EFFECTS.register("tragedy_target", () -> new Effect(EffectType.NEUTRAL, 0xFF6B16) {});
     public static final RegistryObject<Effect> VIGOR_SHIELD = EFFECTS.register("vigor_shield", () -> new Effect(EffectType.BENEFICIAL, 0x43FF9B) {});

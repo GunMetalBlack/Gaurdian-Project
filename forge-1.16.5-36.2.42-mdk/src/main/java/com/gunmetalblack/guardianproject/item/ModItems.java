@@ -41,6 +41,9 @@ public class ModItems {
                     1000                   // The base duration in ticks
             ));
     //Ascended SIGILS
+    public static final RegistryObject<AbstractSigilItem> DIVINE_EYWA_SIGIL = ITEMS.register("divine_eywa_sigil",
+            () -> new com.gunmetalblack.guardianproject.item.custom.sigil.SigilOfDivineEywa(
+                    new Item.Properties().tab(SIGILS_TAB)));
     public static final RegistryObject<AbstractSigilItem> CALAMITY_SIGIL = ITEMS.register("calamity_sigil",
             () -> new com.gunmetalblack.guardianproject.item.custom.sigil.SigilOfCalamity(
                     new Item.Properties().tab(SIGILS_TAB)));
