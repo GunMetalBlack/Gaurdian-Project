@@ -62,6 +62,10 @@ minecraft {
         configureEach {
             workingDirectory project.file('run')
 
+            // Runtime mods ship SRG-named Mixin refmaps; translate them for this mapped workspace.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', file("${buildDir}/createSrgToMcp/output.srg").absolutePath
+
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
             // "SCAN": For mods scan.
@@ -103,6 +107,22 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven {
+        name = 'Covers1624'
+        url = 'https://maven.covers1624.net/'
+        content {
+            includeGroup 'com.brandon3055.draconicevolution'
+            includeGroup 'com.brandon3055.brandonscore'
+            includeGroup 'codechicken'
+        }
+    }
+    ivy {
+        name = 'WthitGitHubReleases'
+        url = 'https://github.com/badasintended/wthit/releases/download/'
+        patternLayout { artifact '[revision]/[artifact]-[revision]-[classifier].[ext]' }
+        metadataSources { artifact() }
+        content { includeGroup 'dev.runtime.wthit' }
+    }
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
@@ -119,6 +139,12 @@ dependencies {
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Development runtime only; neither bundled nor required by the published mod.
+    runtimeOnly fg.deobf('com.brandon3055.draconicevolution:Draconic-Evolution:1.16.5-3.0.29.518:universal')
+    runtimeOnly fg.deobf('com.brandon3055.brandonscore:BrandonsCore:1.16.5-3.0.15.248:universal')
+    runtimeOnly fg.deobf('codechicken:CodeChickenLib:1.16.5-4.0.7.445:universal')
+    runtimeOnly fg.deobf('dev.runtime.wthit:wthit:2.10.9:forge')
 
     // Real mod deobf dependency examples - these get remapped to your current mappings
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
